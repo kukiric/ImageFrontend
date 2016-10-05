@@ -9,7 +9,12 @@ app.use(express.static('public'));
 
 app.post("/upload", upload.single("image"), function(req, res) {
     console.log(req.file);
-    res.sendStatus(200);
+    if (req.file) { 
+        res.sendStatus(200);
+    }
+    else {
+        res.sendStatus(400);
+    }
 });
 
 app.listen(listenPort, function() {

@@ -1,18 +1,26 @@
 <head>
-    <link rel="stylesheet" href="index.css"></link>
+    <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <div id="loader" class="hidden">
+    <div id="loader">
         <div class="spinner">
             <div class="cube1"></div>
             <div class="cube2"></div>
         </div>
     </div>
-    <div id="content">
+    <div id="content" class="hidden">
         <form method="post" enctype="multipart/form-data" action="/upload">
-            <input type="file" name="image">
-            <input type="submit" value="Enviar">
+            <div class="file-field input-field">
+                <div class="btn">
+                    <span>Escolher imagem</span>
+                    <input type="file" name="image">
+                </div>
+                <div class="file-path-wrapper">
+                    <input class="file-path validate" type="text">
+                </div>
+            </div>
+            <input class="btn" type="submit" value="Enviar">
         </form>
     </div>
-    <!--<script src="bundle.js"></script>-->
+    <script src="index.js"></script>
 </body>
