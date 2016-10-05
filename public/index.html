@@ -2,14 +2,14 @@
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <div id="loader">
+    <div id="loader" class="hidden">
         <div class="spinner">
             <div class="cube1"></div>
             <div class="cube2"></div>
         </div>
     </div>
-    <div id="content" class="hidden">
-        <form method="post" enctype="multipart/form-data" action="/upload">
+    <div id="content">
+        <form id="form" method="post" enctype="multipart/form-data" action="/upload">
             <div class="file-field input-field">
                 <div class="btn">
                     <span>Escolher imagem</span>
@@ -19,8 +19,23 @@
                     <input class="file-path validate" type="text">
                 </div>
             </div>
-            <input class="btn" type="submit" value="Enviar">
+            <input id="submit" class="btn" type="submit" value="Enviar">
         </form>
     </div>
+    <script>
+        function setLoaderVisible(state) {
+            var loader = document.getElementById("loader");
+            var content = document.getElementById("content");
+            if (state) { 
+                content.classList.add("hidden");
+                loader.classList.remove("hidden");
+            }
+            else {
+                loader.classList.add("hidden");
+                content.classList.remove("hidden");
+            }
+        }
+        setLoaderVisible(true);
+    </script>
     <script src="index.js"></script>
 </body>
