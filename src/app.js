@@ -1,14 +1,17 @@
 let express = require("express");
-let app = express();
+let multer = require("multer");
 
 const listenPort = 8080;
+const upload = multer({storage: multer.memoryStorage()});
+const app = express();
 
-app.get("/", function(req, res) {
-    res.setHeader("X-Greeting", "Hello World!");
-    res.send("<h1>Hello Express!</h1>");
-    res.end();
+app.use(express.static('public'));
+
+app.post("/upload", upload.single("image"), function(req, res) {
+    console.log(req.file);
+    res.sendStatus(200);
 });
 
 app.listen(listenPort, function() {
     console.log("Servidor iniciado na porta " + listenPort);
-})
+});

@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/app.js",
-  "scripts": {
-  },
+  "scripts": {},
   "author": "Ricardo Maes <ricmzn@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.14.0"
+    "express": "^4.14.0",
+    "multer": "^1.2.0"
   },
   "devDependencies": {
     "@types/express": "^4.0.33",
+    "@types/multer": "0.0.32",
     "@types/node": "^6.0.42"
   }
 }
