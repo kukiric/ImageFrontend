@@ -11,15 +11,17 @@ function setLoaderVisible(state) {
     }
 }
 
-function preview(event) {
-    var img = $("#preview").get(0);
-    var file = event.files[0];
-    var url = URL.createObjectURL(file);
-    img.src = url;
+function setSubmitEnabled(state) {
+    $("#submit").prop("disabled", !state);
+}
+
+function getSelectedImage() {
+    return $("#image").get(0).files[0];
 }
 
 $("#image").on("change", function() {
-    preview($(this).get(0));
+    var image = getSelectedImage();
+    setSubmitEnabled(image != undefined);
 });
 
 $("#submit").on("click", function() {
@@ -30,4 +32,4 @@ $(window).on("pagehide", function() {
     setLoaderVisible(false);
 });
 
-setLoaderVisible(false);
+setSubmitEnabled(getSelectedImage());

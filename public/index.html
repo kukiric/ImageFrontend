@@ -9,11 +9,13 @@
             <div class="cube2"></div>
         </div>
     </div>
-    <div id="content">
-        <img id="preview" class="responsive-img" src="">
+    <div id="content" class="container centered">
+        <div class="image-container">
+            <img id="preview" class="responsive-img" src="">
+        </div>
         <form id="form" method="post" enctype="multipart/form-data" action="/upload">
             <div class="file-field input-field">
-                <div class="btn">
+                <div class="col s6 green btn">
                     <span>Escolher imagem</span>
                     <input id="image" type="file" name="image" accept="image/*">
                 </div>
@@ -21,7 +23,13 @@
                     <input class="file-path" type="text">
                 </div>
             </div>
-            <input id="submit" class="btn" type="submit" value="Enviar">
+            <div class="row submit-container">
+                <div class="col s2"></div>
+                <div class="col s8">
+                    <input id="submit" class="fluid green btn" type="submit" value="Enviar">
+                </div>
+                <div class="col s2"></div>
+            </div>
         </form>
     </div>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
