@@ -6,6 +6,6 @@ document.getElementById("submit").addEventListener("click", function() {
     setLoaderVisible(true);
 });
 
-document.getElementById("form").addEventListener("submit", function() {
+window.addEventListener("pagehide", function() {
     setLoaderVisible(false);
 });
