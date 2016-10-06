@@ -1,24 +1,47 @@
-let express = require("express");
-let multer = require("multer");
-let fs = require("fs");
+var express = require("express");
+var multer = require("multer");
+var net = require("net");
+var fs = require("fs");
 
-const listenPort = 8080;
-const upload = multer({dest: "uploads/"});
-const app = express();
+var httpPort = 3000;
+var sockPort = 3099;
+var upload = multer({dest: "uploads/"});
 
+// Servidor HTTP (recenbe a imagem do cliente e armazena na fila)
+var app = express();
 app.use(express.static('public'));
-
-app.post("/upload", upload.single("image"), function(req, res) {
-    console.log(req.file);
-    if (req.file) { 
-        res.sendStatus(200);
-        fs.unlinkSync(req.file.path);
+app.post("/upload", upload.single("image"), function(request, response) {
+    console.log(request.file);
+    if (request.file) { 
+        response.sendStatus(200);
+        fs.unlinkSync(request.file.path);
     }
     else {
-        res.sendStatus(400);
+        response.sendStatus(400);
     }
 });
+app.listen(httpPort, function() {
+    console.log("Servidor HTTP iniciado na porta " + httpPort);
+});
 
-app.listen(listenPort, function() {
-    console.log("Servidor iniciado na porta " + listenPort);
+// Servidor sockets (envia a primeira imagem da ao pedido do cliente)
+var sender = net.createServer(function(socket) {
+    socket.on("data", function(data) {
+        var command = data.toString().trim().toLowerCase();
+        switch (command) {
+            case "ready":
+                socket.write("Enviando a primeira imagem...");
+                break;
+            case "pop":
+                socket.write("Deletando a primeira imagem...");
+                break;
+            case "quit":
+                socket.write("Terminando a conexão...");
+                socket.end();
+                break;
+        }
+    });
+})
+sender.listen(sockPort, function() {
+    console.log("Servidor Sockets iniciado na porta " + sockPort)
 });
