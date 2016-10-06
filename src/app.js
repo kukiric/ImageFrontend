@@ -100,3 +100,14 @@ var sender = net.createServer(function(socket) {
 sender.listen(sockPort, "0.0.0.0", function() {
     console.log("Servidor Sockets iniciado na porta " + sockPort)
 });
+
+// Adiciona os arquivos restantes da pasta de uploads à fila
+fs.readdir("uploads/", function(error, files) {
+    if (error) {
+        console.log("Aviso: não foi possível abrir pasta de uploads para indexação");
+        return;
+    }
+    for (i in files) {
+        queue.push("uploads/" + files[i]);
+    }
+})
