@@ -16,12 +16,13 @@ app.post("/upload", upload.single("image"), function(request, response) {
     console.log("Upload recebido");
     // Verifica se algum arquivo foi enviado
     if (request.file) {
-        console.log("Arquivo: ", request.file.path);
+        console.log("Salvo: \"" + request.file.path + "\"");
         response.sendStatus(200);
-        fs.unlinkSync(request.file.path);
+        // Adiciona o arquivo na fila de processamento
+        queue.push(request.file.path);
     }
     else {
-        console.log("Arquivo: vazio ou inválido");
+        console.log("Erro: arquivo vazio ou inválido");
         response.sendStatus(400);
     }
     console.log();
@@ -45,22 +46,41 @@ var sender = net.createServer(function(socket) {
         console.log("Recebido comando: \"" + command + "\"");
         switch (command) {
             case "ready":
+                // Buffer usado para alocar exatamente 4 bytes (int32_t) para o tamanho do arquivo
+                var sizeBuffer = Buffer.alloc(4);
                 if (queue.length > 0) {
-                    console.log("Enviando arquivo: " + queue[0]);
-                    socket.write("Y");
-                    var size = Buffer.alloc(4);
-                    size.writeInt32LE(1024);
-                    socket.write(size);
+                    var path = queue[0];
+                    var size = fs.statSync(path).size;
+                    console.log("Enviando arquivo: \"" + path + "\"");
+                    // Envia o tamanho do arquivo seguido dos dados
+                    sizeBuffer.writeInt32LE(size);
+                    socket.write(sizeBuffer);
+                    var stream = fs.createReadStream(path);
+                    stream.on("readable", function() {
+                        while (true) {
+                            // Separa o arquivo em pedaços de 16 MiB
+                            var chunk = stream.read(16 * 1024 * 1024);
+                            if (chunk) {
+                                socket.write(chunk);
+                            }
+                            else {
+                                break;
+                            }
+                        }
+                    });
                 }
                 else {
                     console.log("Erro: fila vazia");
-                    socket.write("N");
+                    // Envia um tamanho negativo como erro
+                    sizeBuffer.writeInt32LE(-1);
+                    socket.write(sizeBuffer);
                 }
                 break;
             case "pop":
                 if (queue.length > 0) {
-                    console.log("Deletando arquivo: " + queue[0]);
-                    fs.unlinkSync(queue[0]);
+                    var path = queue[0];
+                    console.log("Deletando arquivo: " + path);
+                    fs.unlinkSync(path);
                     queue.shift();
                 }
                 else {
