@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/app.js",
   "scripts": {
-    "webpack": "webpack"
+    "start": "node src/app.js"
   },
   "author": "Ricardo Maes <ricmzn@gmail.com>",
   "license": "MIT",
