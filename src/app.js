@@ -45,7 +45,8 @@ var sender = net.createServer(function(socket) {
         var command = data.toString().trim().toLowerCase();
         console.log("Recebido comando: \"" + command + "\"");
         switch (command) {
-            case "ready":
+            case "get":
+                // Baixa o primeiro arquivo da fila
                 // Buffer usado para alocar exatamente 4 bytes (int32_t) para o tamanho do arquivo
                 var sizeBuffer = Buffer.alloc(4);
                 if (queue.length > 0) {
@@ -77,6 +78,7 @@ var sender = net.createServer(function(socket) {
                 }
                 break;
             case "pop":
+                // Remove o primeiro arquivo da fila
                 if (queue.length > 0) {
                     var path = queue[0];
                     console.log("Deletando arquivo: " + path);
@@ -87,7 +89,15 @@ var sender = net.createServer(function(socket) {
                     console.log("Erro: fila vazia");
                 }
                 break;
+            case "count":
+                // Retorna o número de arquivos na fila
+                console.log("Contagem de elementos: " + queue.length);
+                var countBuffer = Buffer.alloc(4);
+                countBuffer.writeInt32LE(queue.length);
+                socket.write(countBuffer);
+                break;
             case "quit":
+                // Desconecta o cliente
                 console.log("Desconectando o cliente por pedido");
                 socket.end();
                 break;
