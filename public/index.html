@@ -10,11 +10,12 @@
         </div>
     </div>
     <div id="content">
-        <form id="form" method="post" enctype="multipart/form-data" action="/upload">
+        <img id="preview" class="responsive-img" src="">
+        <form id="form" method="post" enctype="multipart/form-data" accept="image/*" action="/upload">
             <div class="file-field input-field">
                 <div class="btn">
                     <span>Escolher imagem</span>
-                    <input type="file" name="image">
+                    <input id="image" type="file" name="image">
                 </div>
                 <div class="file-path-wrapper">
                     <input class="file-path" type="text">
