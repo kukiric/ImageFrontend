@@ -32,12 +32,13 @@ app.listen(httpPort, function() {
 
 // Servidor sockets (envia a primeira imagem da ao pedido do cliente)
 var sender = net.createServer(function(socket) {
-    console.log("Cliente conectado: " + socket.remoteAddress);
+    var client = socket.remoteAddress + ":" + socket.remotePort;
+    console.log("Cliente conectado: " + client);
     socket.on("end", function() {
-        console.log("Cliente desconectou normalmente: " + socket.remoteAddress);
+        console.log("Cliente desconectou normalmente: " + client);
     });
     socket.on("error", function(error) {
-        console.log("Cliente desconectou com erro: " + socket.remoteAddress + " (" + error.message + ")");
+        console.log("Cliente desconectou com erro: " + client + " (" + error.message + ")");
     });
     socket.on("data", function(data) {
         var command = data.toString().trim().toLowerCase();
@@ -67,7 +68,7 @@ var sender = net.createServer(function(socket) {
                 }
                 break;
             case "quit":
-                console.log("Desconectando o cliente: " + socket.remoteAddress);
+                console.log("Desconectando o cliente por pedido");
                 socket.end();
                 break;
             default:
@@ -76,6 +77,6 @@ var sender = net.createServer(function(socket) {
         }
     });
 })
-sender.listen(sockPort, function() {
+sender.listen(sockPort, "0.0.0.0", function() {
     console.log("Servidor Sockets iniciado na porta " + sockPort)
 });
