@@ -17,13 +17,15 @@ app.post("/upload", upload.single("image"), function(request, response) {
     // Verifica se algum arquivo foi enviado
     if (request.file) {
         console.log("Salvo: \"" + request.file.path + "\"");
-        response.sendStatus(200);
         // Adiciona o arquivo na fila de processamento
         queue.push(request.file.path);
+        // Informa o cliente do sucesso
+        response.status(200).redirect("/?status=0").end();
     }
     else {
+        // Informa o erro
         console.log("Erro: arquivo vazio ou inválido");
-        response.sendStatus(400);
+        response.status(400).redirect("/?status=1").end();
     }
     console.log();
 });
