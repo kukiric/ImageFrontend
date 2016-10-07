@@ -51,7 +51,7 @@ app.post("/upload", upload.single("image"), function(request, response) {
 app.get("/", function(req, res) {
 	console.log("Received password " + req.query.pass + ". Expected " + password);
     if (req.query.pass == password) {
-		res.redirect("page.html/?pass=" + req.query.pass);
+		res.redirect("form.html/?pass=" + req.query.pass);
 	} else {
 		console.log("Fail");
 	}
