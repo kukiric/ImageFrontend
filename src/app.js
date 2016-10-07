@@ -86,32 +86,35 @@ var sender = net.createServer(function(socket) {
                 // Baixa o primeiro arquivo da fila
                 // Buffer usado para alocar exatamente 4 bytes (int32_t) para o tamanho do arquivo
                 var sizeBuffer = Buffer.alloc(4);
-                if (queue.length > 0) {
-                    var path = queue[0];
-                    var size = fs.statSync(path).size;
-                    console.log("Enviando arquivo: \"" + path + "\"");
-                    // Envia o tamanho do arquivo seguido dos dados
-                    sizeBuffer.writeInt32LE(size);
-                    socket.write(sizeBuffer);
-                    var stream = fs.createReadStream(path);
-                    stream.on("readable", function() {
-                        while (true) {
-                            // Separa o arquivo em pedaços de 16 MiB
-                            var chunk = stream.read(16 * 1024 * 1024);
-                            if (chunk) {
-                                socket.write(chunk);
-                            }
-                            else {
-                                break;
-                            }
+                var fileSent = false;
+                // Tenta todos os arquivos até achar um válido (normalmente o primeiro)
+                while (!fileSent) {
+                    if (queue.length > 0) {
+                        var path = queue[0];
+                        try {
+                            var size = fs.statSync(path).size;
+                            console.log("Enviando arquivo: \"" + path + "\"");
+                            // Envia o tamanho do arquivo seguido dos dados
+                            sizeBuffer.writeInt32LE(size);
+                            var contents = fs.readFileSync(path);
+                            // Garante a saída do loop mesmo se houver erro durante a escrita no socket
+                            fileSent = true;
+                            socket.write(sizeBuffer);
+                            socket.write(contents);
+                            break;
                         }
-                    });
-                }
-                else {
-                    console.log("Erro: fila vazia");
-                    // Envia um tamanho negativo como erro
-                    sizeBuffer.writeInt32LE(-1);
-                    socket.write(sizeBuffer);
+                        catch (error) {
+                            console.log("Aviso: não foi possível abrir o arquivo: \"", path, "\", tentando o próximo");
+                            queue.shift();
+                        }
+                    }
+                    else {
+                        console.log("Erro: fila vazia");
+                        // Envia um tamanho negativo como erro
+                        sizeBuffer.writeInt32LE(-1);
+                        socket.write(sizeBuffer);
+                        break;
+                    }
                 }
                 break;
             case "pop":
