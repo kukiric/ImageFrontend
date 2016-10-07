@@ -1,5 +1,6 @@
 var express = require("express");
 var multer = require("multer");
+var session = require("express-session");
 var rightPad = require("right-pad");
 var net = require("net");
 var fs = require("fs");
@@ -20,43 +21,46 @@ function createPassword() {
 // Servidor HTTP (recenbe a imagem do cliente e armazena na fila)
 var app = express();
 app.use(express.static('public'));
+app.use(session({secret: createPassword(), path: "/sessions", maxAge: 5 * 1000, secure: false}));
 app.post("/upload", upload.single("image"), function(request, response) {
     console.log("Upload recebido");
     // Checa a senha de upload
-    if (request.body.secret === password) {
+    if (request.session.password === password) {
         // Verifica se algum arquivo foi enviado
         if (request.file) {
             console.log("Salvo: \"" + request.file.path + "\"");
             // Adiciona o arquivo na fila de processamento
             queue.push(request.file.path);
             // Informa o cliente do sucesso
-            response.status(200).redirect("/?status=0");
+            response.status(200).redirect("/success.html");
             // Gera uma nova senha para envio
             password = createPassword();
             console.log("Nova senha gerada: " + password);
         }
         else {
             console.log("Erro: arquivo vazio ou inválido");
-            response.status(400).redirect("/?status=1");
+            response.status(400).redirect("/error.html");
         }
     }
     else {
-        console.log("Erro: senha inválida");
-        response.status(403).redirect("/?status=2");
+        console.log("Erro: o cliente enviou uma senha antiga ou inválida");
+        response.redirect("/error.html");
         fs.unlinkSync(request.file.path);
     }
     console.log();
 });
 
-app.get("/", function(req, res) {
-    var queryPass = req.query.pass;
+// Página que requere a senha na url como parâmetro
+app.get("/", function(request, response) {
+    var queryPass = request.query.pass;
 	console.log("Senha recebida: " + queryPass);
     if (queryPass == password) {
         console.log("Senha correta, redirecionando para o formulário");
-		res.redirect("form.html?pass=" + req.query.pass);
+        request.session.password = password;
+		response.redirect("/form.html");
 	} else {
 		console.log("Senha incorreta, cancelando redirecionamento");
-        res.redirect("error.html");
+        response.redirect("/error.html");
 	}
 });
 
