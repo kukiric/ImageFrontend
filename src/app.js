@@ -22,7 +22,7 @@ var app = express();
 app.use(express.static('public'));
 app.post("/upload", upload.single("image"), function(request, response) {
     console.log("Upload recebido");
-    // Checa a senha do formulário
+    // Checa a senha de upload
     if (request.body.secret === password) {
         // Verifica se algum arquivo foi enviado
         if (request.file) {
@@ -49,11 +49,14 @@ app.post("/upload", upload.single("image"), function(request, response) {
 });
 
 app.get("/", function(req, res) {
-	console.log("Received password " + req.query.pass + ". Expected " + password);
-    if (req.query.pass == password) {
-		res.redirect("form.html/?pass=" + req.query.pass);
+    var queryPass = req.query.pass;
+	console.log("Senha recebida: " + queryPass);
+    if (queryPass == password) {
+        console.log("Senha correta, redirecionando para o formulário");
+		res.redirect("form.html?pass=" + req.query.pass);
 	} else {
-		console.log("Fail");
+		console.log("Senha incorreta, cancelando redirecionamento");
+        res.redirect("error.html");
 	}
 });
 

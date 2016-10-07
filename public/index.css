@@ -47,6 +47,12 @@ body {
     height: 3em;
 }
 
+.message-center {
+    position: absolute;
+    width: 100%;
+    top: 33%;
+}
+
 /* Atribuição: https://github.com/tobiasahlin/SpinKit */
 
 .spinner {
