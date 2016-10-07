@@ -33,11 +33,8 @@ function getQueryParam(key) {
 
 function validateForm() {
     var image = getSelectedImage();
-    var password = $("#secret").val();
-    setSubmitEnabled(image != undefined && password.length == 6);
+    setSubmitEnabled(image != undefined);
 }
-
-$("#secret").on("input", validateForm);
 
 $("#image").on("change", validateForm);
 
