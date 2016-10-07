@@ -47,6 +47,16 @@ app.post("/upload", upload.single("image"), function(request, response) {
     }
     console.log();
 });
+
+app.get("/", function(req, res) {
+	console.log("Received password " + req.query.pass + ". Expected " + password);
+    if (req.query.pass == password) {
+		res.redirect("page.html/?pass=" + req.query.pass);
+	} else {
+		console.log("Fail");
+	}
+});
+
 app.listen(httpPort, function() {
     console.log("Servidor HTTP iniciado na porta " + httpPort);
 });
