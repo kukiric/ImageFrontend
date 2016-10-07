@@ -31,10 +31,15 @@ function getQueryParam(key) {
     return undefined;
 }
 
-$("#image").on("change", function() {
+function validateForm() {
     var image = getSelectedImage();
-    setSubmitEnabled(image != undefined);
-});
+    var password = $("#secret").val();
+    setSubmitEnabled(image != undefined && password.length == 6);
+}
+
+$("#secret").on("input", validateForm);
+
+$("#image").on("change", validateForm);
 
 $("#submit").on("click", function() {
     setLoaderVisible(true);
@@ -44,7 +49,7 @@ $(window).on("pagehide", function() {
     setLoaderVisible(false);
 });
 
-setSubmitEnabled(getSelectedImage());
+validateForm();
 
 switch (parseInt(getQueryParam("status"))) {
     // Sucesso
@@ -54,6 +59,9 @@ switch (parseInt(getQueryParam("status"))) {
     // Falha
     case 1:
         $("#message").text("Erro no envio da imagem");
+        break;
+    case 2:
+        $("#message").text("Senha de envio incorreta");
         break;
     // Nada
     default:

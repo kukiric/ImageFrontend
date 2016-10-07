@@ -1,5 +1,7 @@
 var express = require("express");
 var multer = require("multer");
+var bodyParser = require("body-parser");
+var rightPad = require("right-pad");
 var net = require("net");
 var fs = require("fs");
 
@@ -8,24 +10,42 @@ var sockPort = 3099;
 var upload = multer({dest: "uploads/"});
 
 var queue = [];
+var password;
+
+// Gera uma senha aleatória de 6 digitos
+function createPassword() {
+    var num = Math.random().toString().substr(2, 6);
+    return rightPad(num, 6, "0");
+}
 
 // Servidor HTTP (recenbe a imagem do cliente e armazena na fila)
 var app = express();
 app.use(express.static('public'));
+app.use(bodyParser());
 app.post("/upload", upload.single("image"), function(request, response) {
     console.log("Upload recebido");
-    // Verifica se algum arquivo foi enviado
-    if (request.file) {
-        console.log("Salvo: \"" + request.file.path + "\"");
-        // Adiciona o arquivo na fila de processamento
-        queue.push(request.file.path);
-        // Informa o cliente do sucesso
-        response.status(200).redirect("/?status=0").end();
+    // Checa a senha do formulário
+    if (request.body.secret === password) {
+        // Verifica se algum arquivo foi enviado
+        if (request.file) {
+            console.log("Salvo: \"" + request.file.path + "\"");
+            // Adiciona o arquivo na fila de processamento
+            queue.push(request.file.path);
+            // Informa o cliente do sucesso
+            response.status(200).redirect("/?status=0");
+            // Gera uma nova senha para envio
+            password = createPassword();
+            console.log("Nova senha gerada: " + password);
+        }
+        else {
+            console.log("Erro: arquivo vazio ou inválido");
+            response.status(400).redirect("/?status=1");
+        }
     }
     else {
-        // Informa o erro
-        console.log("Erro: arquivo vazio ou inválido");
-        response.status(400).redirect("/?status=1").end();
+        console.log("Erro: senha inválida");
+        response.status(403).redirect("/?status=2");
+        fs.unlinkSync(request.file.path);
     }
     console.log();
 });
@@ -98,6 +118,11 @@ var sender = net.createServer(function(socket) {
                 countBuffer.writeInt32LE(queue.length);
                 socket.write(countBuffer);
                 break;
+            case "password":
+                // Retorna a senha necessária para o upload da próxima imagem
+                console.log("Imprimindo senha de upload...");
+                socket.write(password);
+                break;
             case "quit":
                 // Desconecta o cliente
                 console.log("Desconectando o cliente por pedido");
@@ -113,6 +138,10 @@ sender.listen(sockPort, "0.0.0.0", function() {
     console.log("Servidor Sockets iniciado na porta " + sockPort)
 });
 
+// Cria uma senha para envio
+password = createPassword();
+console.log("Senha de upload: " + password);
+
 // Adiciona os arquivos restantes da pasta de uploads à fila
 fs.readdir("uploads/", function(error, files) {
     if (error) {
@@ -122,4 +151,4 @@ fs.readdir("uploads/", function(error, files) {
     for (i in files) {
         queue.push("uploads/" + files[i]);
     }
-})
+});
