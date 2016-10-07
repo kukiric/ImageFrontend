@@ -1,6 +1,5 @@
 var express = require("express");
 var multer = require("multer");
-var bodyParser = require("body-parser");
 var rightPad = require("right-pad");
 var net = require("net");
 var fs = require("fs");
@@ -21,7 +20,6 @@ function createPassword() {
 // Servidor HTTP (recenbe a imagem do cliente e armazena na fila)
 var app = express();
 app.use(express.static('public'));
-app.use(bodyParser());
 app.post("/upload", upload.single("image"), function(request, response) {
     console.log("Upload recebido");
     // Checa a senha do formulário
