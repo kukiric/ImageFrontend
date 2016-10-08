@@ -2,6 +2,7 @@ var express = require("express");
 var multer = require("multer");
 var session = require("express-session");
 var rightPad = require("right-pad");
+var leftPad = require("left-pad");
 var net = require("net");
 var fs = require("fs");
 
@@ -11,6 +12,15 @@ var upload = multer({dest: "uploads/"});
 
 var queue = [];
 var password;
+
+function log(message) {
+    var date = new Date();
+    var timestamp = leftPad(date.getHours(), 2, '0')
+            + ":" + leftPad(date.getMinutes(), 2, '0')
+            + ":" + leftPad(date.getSeconds(), 2, '0')
+            + "." + leftPad(date.getMilliseconds(), 3, '0');
+    console.log("[" + timestamp + "] " + message);
+}
 
 // Gera uma senha aleatória de 6 digitos
 function createPassword() {
@@ -23,64 +33,64 @@ var app = express();
 app.use(express.static('public'));
 app.use(session({secret: createPassword(), path: "sessions/", maxAge: 60 * 60 * 1000, secure: false}));
 app.post("/upload", upload.single("image"), function(request, response) {
-    console.log("Upload recebido");
+    log("Upload recebido");
     // Checa a senha de upload
     if (request.session.password === password) {
         // Verifica se algum arquivo foi enviado
         if (request.file) {
-            console.log("Salvo: \"" + request.file.path + "\"");
+            log("Salvo: \"" + request.file.path + "\"");
             // Adiciona o arquivo na fila de processamento
             queue.push(request.file.path);
             // Informa o cliente do sucesso
             response.status(200).redirect("/success.html");
             // Gera uma nova senha para envio
             password = createPassword();
-            console.log("Nova senha gerada: " + password);
+            log("Nova senha gerada: " + password);
         }
         else {
-            console.log("Erro: arquivo vazio ou inválido");
+            log("Erro: arquivo vazio ou inválido");
             response.status(400).redirect("/error.html");
         }
     }
     else {
-        console.log("Erro: o cliente enviou uma senha antiga ou inválida");
+        log("Erro: o cliente enviou uma senha antiga ou inválida");
         response.redirect("/error.html");
         fs.unlinkSync(request.file.path);
     }
-    console.log();
+    log();
 });
 
 // Página que requere a senha na url como parâmetro
 app.get("/", function(request, response) {
     var queryPass = request.query.pass;
-	console.log("Senha recebida: " + queryPass);
+	log("Senha recebida: " + queryPass);
     if (queryPass == password) {
-        console.log("Senha correta, redirecionando para o formulário");
+        log("Senha correta, redirecionando para o formulário");
         request.session.password = password;
 		response.redirect("/form.html");
 	} else {
-		console.log("Senha incorreta, cancelando redirecionamento");
+		log("Senha incorreta, cancelando redirecionamento");
         response.redirect("/error.html");
 	}
 });
 
 app.listen(httpPort, function() {
-    console.log("Servidor HTTP iniciado na porta " + httpPort);
+    log("Servidor HTTP iniciado na porta " + httpPort);
 });
 
 // Servidor sockets (envia a primeira imagem da ao pedido do cliente)
 var sender = net.createServer(function(socket) {
     var client = socket.remoteAddress + ":" + socket.remotePort;
-    console.log("Cliente conectado: " + client);
+    log("Cliente conectado: " + client);
     socket.on("end", function() {
-        console.log("Cliente desconectou normalmente: " + client);
+        log("Cliente desconectou normalmente: " + client);
     });
     socket.on("error", function(error) {
-        console.log("Cliente desconectou com erro: " + client + " (" + error.message + ")");
+        log("Cliente desconectou com erro: " + client + " (" + error.message + ")");
     });
     socket.on("data", function(data) {
         var command = data.toString().trim().toLowerCase();
-        console.log("Recebido comando: \"" + command + "\"");
+        log("Recebido comando: \"" + command + "\"");
         switch (command) {
             case "get":
                 // Baixa o primeiro arquivo da fila
@@ -93,7 +103,7 @@ var sender = net.createServer(function(socket) {
                         var path = queue[0];
                         try {
                             var size = fs.statSync(path).size;
-                            console.log("Enviando arquivo: \"" + path + "\"");
+                            log("Enviando arquivo: \"" + path + "\"");
                             // Envia o tamanho do arquivo seguido dos dados
                             sizeBuffer.writeInt32LE(size);
                             var contents = fs.readFileSync(path);
@@ -104,12 +114,12 @@ var sender = net.createServer(function(socket) {
                             break;
                         }
                         catch (error) {
-                            console.log("Aviso: não foi possível abrir o arquivo: \"", path, "\", tentando o próximo");
+                            log("Aviso: não foi possível abrir o arquivo: \"", path, "\", tentando o próximo");
                             queue.shift();
                         }
                     }
                     else {
-                        console.log("Erro: fila vazia");
+                        log("Erro: fila vazia");
                         // Envia um tamanho negativo como erro
                         sizeBuffer.writeInt32LE(-1);
                         socket.write(sizeBuffer);
@@ -121,49 +131,49 @@ var sender = net.createServer(function(socket) {
                 // Remove o primeiro arquivo da fila
                 if (queue.length > 0) {
                     var path = queue[0];
-                    console.log("Deletando arquivo: " + path);
+                    log("Deletando arquivo: " + path);
                     fs.unlinkSync(path);
                     queue.shift();
                 }
                 else {
-                    console.log("Erro: fila vazia");
+                    log("Erro: fila vazia");
                 }
                 break;
             case "count":
                 // Retorna o número de arquivos na fila
-                console.log("Contagem de elementos: " + queue.length);
+                log("Contagem de elementos: " + queue.length);
                 var countBuffer = Buffer.alloc(4);
                 countBuffer.writeInt32LE(queue.length);
                 socket.write(countBuffer);
                 break;
             case "password":
                 // Retorna a senha necessária para o upload da próxima imagem
-                console.log("Imprimindo senha de upload...");
+                log("Imprimindo senha de upload...");
                 socket.write(password);
                 break;
             case "quit":
                 // Desconecta o cliente
-                console.log("Desconectando o cliente por pedido");
+                log("Desconectando o cliente por pedido");
                 socket.end();
                 break;
             default:
-                console.log("Comando desconhecido ignorado");
+                log("Comando desconhecido ignorado");
                 break;
         }
     });
 })
 sender.listen(sockPort, "0.0.0.0", function() {
-    console.log("Servidor Sockets iniciado na porta " + sockPort)
+    log("Servidor Sockets iniciado na porta " + sockPort)
 });
 
 // Cria uma senha para envio
 password = createPassword();
-console.log("Senha de upload: " + password);
+log("Senha de upload: " + password);
 
 // Adiciona os arquivos restantes da pasta de uploads à fila
 fs.readdir("uploads/", function(error, files) {
     if (error) {
-        console.log("Aviso: não foi possível abrir pasta de uploads para indexação");
+        log("Aviso: não foi possível abrir pasta de uploads para indexação");
         return;
     }
     for (i in files) {
