@@ -21,7 +21,7 @@ function createPassword() {
 // Servidor HTTP (recenbe a imagem do cliente e armazena na fila)
 var app = express();
 app.use(express.static('public'));
-app.use(session({secret: createPassword(), path: "/sessions", maxAge: 60 * 5 * 1000, secure: false}));
+app.use(session({secret: createPassword(), path: "sessions/", maxAge: 60 * 60 * 1000, secure: false}));
 app.post("/upload", upload.single("image"), function(request, response) {
     console.log("Upload recebido");
     // Checa a senha de upload
